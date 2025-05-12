@@ -67,3 +67,55 @@ model Verification {
 
   @@map("verification")
 }
+
+model Customer {
+  id        String             @id @default(uuid())
+  name      String
+  email     String             @unique
+  phone     String?
+  createdAt DateTime           @default(now())
+  orders    Order[]
+  campaigns CommunicationLog[]
+}
+
+model Order {
+  id         String   @id @default(uuid())
+  customer   Customer @relation(fields: [customerId], references: [id])
+  customerId String
+  amount     Float
+  createdAt  DateTime @default(now())
+}
+
+model Segment {
+  id        String     @id @default(uuid())
+  name      String
+  ruleJson  Json
+  audience  Json
+  createdAt DateTime   @default(now())
+  campaigns Campaign[]
+}
+
+model Campaign {
+  id        String             @id @default(uuid())
+  segment   Segment            @relation(fields: [segmentId], references: [id])
+  segmentId String
+  message   String
+  createdAt DateTime           @default(now())
+  logs      CommunicationLog[]
+}
+
+model CommunicationLog {
+  id         String         @id @default(uuid())
+  customer   Customer       @relation(fields: [customerId], references: [id])
+  customerId String
+  campaign   Campaign       @relation(fields: [campaignId], references: [id])
+  campaignId String
+  status     DeliveryStatus
+  createdAt  DateTime       @default(now())
+}
+
+enum DeliveryStatus {
+  SENT
+  FAILED
+  PENDING
+}
