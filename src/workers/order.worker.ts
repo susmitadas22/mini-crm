@@ -5,7 +5,7 @@ import { Order } from "~/schemas";
 import { Worker } from "bullmq";
 
 export const orderWorker = new Worker(
-  CONSTS.QUEUES.CUSTOMER_QUEUE,
+  CONSTS.QUEUES.ORDER_QUEUE,
   async (job) => {
     const { data } = job.data as { data: Order };
     const customer = await prisma.customer.findUnique({
