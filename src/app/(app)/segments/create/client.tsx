@@ -76,121 +76,171 @@ export function RuleBuilderForm() {
     toast.success("Audience fetched successfully!");
   };
 
-  return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-6 p-4 max-w-3xl w-full mx-auto"
-    >
-      <h2 className="text-xl font-bold">Segment Rule Builder</h2>
-      <div className="space-y-4">
-        <Input placeholder="Segment Name" {...register("segmentName")} />
-        <div>
-          <Textarea placeholder="Message" {...register("message")} />
-          <span className="text-xs">
-            use {`{email}`} to insert the customer&apos;s email
-          </span>
-        </div>
-      </div>
-      <div className="space-y-4">
-        {ruleFields.map((field, index) => (
-          <Card key={field.id} className="flex items-center p-4">
-            <Select
-              {...register(`rules.${index}.field` as const)}
-              onValueChange={(value) => {
-                form.setValue(`rules.${index}.field`, value);
-              }}
-              defaultValue={field.field}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Field" />
-              </SelectTrigger>
-              <SelectContent>
-                {fields.map((f) => (
-                  <SelectItem key={f} value={f}>
-                    {f.replaceAll("_", " ")}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              {...register(`rules.${index}.operator` as const)}
-              onValueChange={(value) => {
-                form.setValue(`rules.${index}.operator`, value);
-              }}
-              defaultValue={field.operator}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Operator" />
-              </SelectTrigger>
-              <SelectContent>
-                {operators.map((o) => (
-                  <SelectItem key={o} value={o}>
-                    {o.replaceAll("_", " ")}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              placeholder="Value"
-              {...register(`rules.${index}.value` as const)}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => remove(index)}
-              className="w-full"
-            >
-              <span>Remove Rule</span>
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </Card>
-        ))}
+  const [suggestInput, setSuggestInput] = React.useState<string>("");
+  const [suggestions, setSuggestions] = React.useState<string[]>([]);
 
+  const fetchMessageSuggestion = async () => {
+    if (loading || ruleFields.length === 0 || suggestInput.length === 0) return;
+    setLoading(true);
+    try {
+      const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ rules: ruleFields, input: suggestInput }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch suggestions");
+      }
+      const data = await response.json();
+      setSuggestions(data.suggestions);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error("Failed to fetch suggestions: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 p-4 max-w-3xl w-full mx-auto">
+      <h2 className="text-xl font-bold">Segment Rule Builder</h2>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="space-y-4">
+          <Input placeholder="Segment Name" {...register("segmentName")} />
+          <div>
+            <Input
+              placeholder="Type to get message suggestions..."
+              value={suggestInput}
+              onChange={(e) => setSuggestInput(e.target.value)}
+              onBlur={fetchMessageSuggestion}
+            />
+            {suggestions.length > 0 && (
+              <div className="absolute bg-white border rounded-md shadow-lg mt-2">
+                {suggestions.map((suggestion, index) => (
+                  <div
+                    key={index}
+                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                    onClick={() => {
+                      form.setValue("message", suggestion);
+                      setSuggestions([]);
+                    }}
+                  >
+                    {suggestion}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div>
+            <Textarea placeholder="Message" {...register("message")} />
+            <span className="text-xs">
+              use {`{email}`} to insert the customer&apos;s email
+            </span>
+          </div>
+        </div>
+        <div className="space-y-4">
+          {ruleFields.map((field, index) => (
+            <Card key={field.id} className="flex items-center p-4">
+              <Select
+                {...register(`rules.${index}.field` as const)}
+                onValueChange={(value) => {
+                  form.setValue(`rules.${index}.field`, value);
+                }}
+                defaultValue={field.field}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Field" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fields.map((f) => (
+                    <SelectItem key={f} value={f}>
+                      {f.replaceAll("_", " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                {...register(`rules.${index}.operator` as const)}
+                onValueChange={(value) => {
+                  form.setValue(`rules.${index}.operator`, value);
+                }}
+                defaultValue={field.operator}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Operator" />
+                </SelectTrigger>
+                <SelectContent>
+                  {operators.map((o) => (
+                    <SelectItem key={o} value={o}>
+                      {o.replaceAll("_", " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="Value"
+                {...register(`rules.${index}.value` as const)}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => remove(index)}
+                className="w-full"
+              >
+                <span>Remove Rule</span>
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </Card>
+          ))}
+
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full"
+            onClick={() => append({ field: "", operator: "", value: "" })}
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add Rule
+          </Button>
+        </div>
         <Button
           type="button"
-          variant="secondary"
-          className="w-full"
-          onClick={() => append({ field: "", operator: "", value: "" })}
+          variant="outline"
+          className="w-full my-2"
+          onClick={fetchAudience}
         >
-          <Plus className="w-4 h-4 mr-2" /> Add Rule
+          Preview Audience
         </Button>
-      </div>
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={fetchAudience}
-      >
-        Preview Audience
-      </Button>
-      {audience.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-lg font-bold">Audience Preview</h3>
-          <table className="min-w-full mt-4">
-            <thead>
-              <tr>
-                <th className="py-2 px-4">Name</th>
-                <th className="py-2 px-4">Email</th>
-                <th className="py-2 px-4">Phone</th>
-              </tr>
-            </thead>
-            <tbody>
-              {audience.map((user) => (
-                <tr key={user.id}>
-                  <td className="py-2 px-4">{user.name}</td>
-                  <td className="py-2 px-4">{user.email}</td>
-                  <td className="py-2 px-4">{user.phone}</td>
+        {audience.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-lg font-bold">Audience Preview</h3>
+            <table className="min-w-full mt-4">
+              <thead>
+                <tr>
+                  <th className="py-2 px-4">Name</th>
+                  <th className="py-2 px-4">Email</th>
+                  <th className="py-2 px-4">Phone</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {audience.length > 0 && (
-        <Button type="submit" className="w-full" disabled={loading}>
-          Save Segment
-        </Button>
-      )}
-    </form>
+              </thead>
+              <tbody>
+                {audience.map((user) => (
+                  <tr key={user.id}>
+                    <td className="py-2 px-4">{user.name}</td>
+                    <td className="py-2 px-4">{user.email}</td>
+                    <td className="py-2 px-4">{user.phone}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {audience.length > 0 && (
+          <Button type="submit" className="w-full" disabled={loading}>
+            Save Segment
+          </Button>
+        )}
+      </form>
+    </div>
   );
 }
