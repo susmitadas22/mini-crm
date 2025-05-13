@@ -56,7 +56,9 @@ export function RuleBuilderForm() {
     }
     setLoading(true);
     await createSegment(data)
-      .then(() => router.push("/segments"))
+      .then(async () => {
+        router.push("/campaigns");
+      })
       .catch((error) => {
         toast.error("Failed to create segment: " + error.message);
       })

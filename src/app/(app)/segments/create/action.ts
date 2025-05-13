@@ -56,10 +56,42 @@ export const createSegment = async (createSegmentData: CreateSegmentSchema) => {
   const segment = await prisma.segment.create({
     data: {
       name: createSegmentData.segmentName,
-      audience: `[${audience.map((customer) => customer.id).join(",")}]`,
-      ruleJson: JSON.stringify(createSegmentData.rules),
+      ruleJson: createSegmentData.rules,
+      audience: audience.map((customer) => customer.id),
       message: createSegmentData.message,
     },
   });
+  Promise.all(
+    audience.map(async (customer) => {
+      await prisma.communicationLog.create({
+        data: {
+          status: "PENDING",
+          customer: { connect: { id: customer.id } },
+          segment: { connect: { id: segment.id } },
+        },
+      });
+      return console.log(
+        "Communication log created for customer:",
+        customer.id
+      );
+    })
+  );
+
+  // Send notification to vendor
+  await fetch(
+    process.env.NODE_ENV === "production"
+      ? process.env.VERCEL_URL + "/api/vendor"
+      : "http://localhost:3000/api/vendor",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        segementId: segment.id,
+      }),
+    }
+  );
+
   return segment;
 };

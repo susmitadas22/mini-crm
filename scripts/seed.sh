@@ -9,7 +9,7 @@ for i in $(seq 1 20); do
 done
 
 
-for i in $(seq 1 50); do
+for i in $(seq 1 100); do
   email="user$((1 + RANDOM % 20))@example.com"
   amount=$((RANDOM % 10000 + 100)) # ₹100–₹10,099
 
