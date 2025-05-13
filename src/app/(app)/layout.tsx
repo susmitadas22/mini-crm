@@ -1,10 +1,8 @@
-import { LogOut } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { api } from "~/services";
-import { Sidebar } from "./sidebar";
+import { LogOut, Sidebar } from "./sidebar";
 
 export default async function AppLayout({
   children,
@@ -40,10 +38,7 @@ export default async function AppLayout({
                 {user.user.name?.charAt(0).toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
-            <Button size="sm" variant="outline">
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
+            <LogOut />
           </div>
         </header>
 

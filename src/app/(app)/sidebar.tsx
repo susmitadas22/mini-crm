@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "~/lib/utils";
 import {
   LayoutDashboard,
@@ -9,7 +9,10 @@ import {
   Users,
   PlusCircle,
   Inbox,
+  LogOutIcon,
 } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import { authClient } from "~/lib/auth.client";
 
 const navItems = [
   {
@@ -65,3 +68,25 @@ export function Sidebar() {
     </aside>
   );
 }
+
+export const LogOut = () => {
+  const router = useRouter();
+  return (
+    <Button
+      onClick={() => {
+        authClient.signOut({
+          fetchOptions: {
+            onSuccess: () => {
+              router.replace("/auth");
+            },
+          },
+        });
+      }}
+      size="sm"
+      variant="outline"
+    >
+      <LogOutIcon className="w-4 h-4 mr-2" />
+      Logout
+    </Button>
+  );
+};
