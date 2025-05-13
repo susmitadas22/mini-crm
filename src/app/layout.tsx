@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Urbanist } from "next/font/google";
+import { Toaster } from "~/components/ui/sonner";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -9,7 +10,7 @@ const urbanist = Urbanist({
 
 export const metadata: Metadata = {
   title: "mini-crm",
-}
+};
 
 export default function RootLayout({
   children,
@@ -20,6 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`antialiased ${urbanist.className}`}>
         {children}
+        <Toaster />
       </body>
     </html>
   );

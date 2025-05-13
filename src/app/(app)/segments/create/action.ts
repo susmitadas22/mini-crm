@@ -1,0 +1,65 @@
+"use server";
+
+import prisma from "~/lib/prisma";
+import { CreateSegmentSchema, Rules } from "~/schemas";
+import { api } from "~/services";
+
+export const getAudiencePreview = async (rules: Rules[]) => {
+  // Fetch customers with calculated orderCount and totalSpend
+  const customers = await api.customer.list();
+  // Filter customers based on rules (e.g., totalSpend > 1000)
+  const filteredCustomers = customers.filter((customer) => {
+    return rules.every((rule) => {
+      switch (rule.field) {
+        case "total_spend":
+          if (rule.operator === "greater_than") {
+            return customer.totalSpend > parseFloat(rule.value);
+          }
+          if (rule.operator === "less_than") {
+            return customer.totalSpend < parseFloat(rule.value);
+          }
+          if (rule.operator === "equal_to") {
+            return customer.totalSpend === parseFloat(rule.value);
+          }
+          break;
+        case "order_count":
+          if (rule.operator === "greater_than") {
+            return customer.orderCount > parseInt(rule.value);
+          }
+          if (rule.operator === "less_than") {
+            return customer.orderCount < parseInt(rule.value);
+          }
+          if (rule.operator === "equal_to") {
+            return customer.orderCount === parseInt(rule.value);
+          }
+          break;
+        case "last_order_date":
+          if (rule.operator === "greater_than") {
+            return customer.orders[0].createdAt > new Date(rule.value);
+          }
+          if (rule.operator === "less_than") {
+            return customer.orders[0].createdAt < new Date(rule.value);
+          }
+          if (rule.operator === "equal_to") {
+            return customer.orders[0].createdAt === new Date(rule.value);
+          }
+          break;
+      }
+      return false;
+    });
+  });
+  return filteredCustomers;
+};
+
+export const createSegment = async (createSegmentData: CreateSegmentSchema) => {
+  const audience = await getAudiencePreview(createSegmentData.rules);
+  const segment = await prisma.segment.create({
+    data: {
+      name: createSegmentData.segmentName,
+      audience: `[${audience.map((customer) => customer.id).join(",")}]`,
+      ruleJson: JSON.stringify(createSegmentData.rules),
+      message: createSegmentData.message,
+    },
+  });
+  return segment;
+};

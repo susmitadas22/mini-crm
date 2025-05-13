@@ -87,29 +87,21 @@ model Order {
 }
 
 model Segment {
-  id        String     @id @default(uuid())
+  id        String             @id @default(uuid())
   name      String
   ruleJson  Json
+  message   String // Message field to store the message content
   audience  Json
-  createdAt DateTime   @default(now())
-  campaigns Campaign[]
-}
-
-model Campaign {
-  id        String             @id @default(uuid())
-  segment   Segment            @relation(fields: [segmentId], references: [id])
-  segmentId String
-  message   String
   createdAt DateTime           @default(now())
-  logs      CommunicationLog[]
+  logs      CommunicationLog[] // Communication logs for tracking messages sent
 }
 
 model CommunicationLog {
   id         String         @id @default(uuid())
   customer   Customer       @relation(fields: [customerId], references: [id])
   customerId String
-  campaign   Campaign       @relation(fields: [campaignId], references: [id])
-  campaignId String
+  segment    Segment        @relation(fields: [segmentId], references: [id])
+  segmentId  String
   status     DeliveryStatus
   createdAt  DateTime       @default(now())
 }

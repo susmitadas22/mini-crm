@@ -9,6 +9,9 @@ export const ruleSchema = z.object({
 export const createSegmentSchema = z.object({
   segmentName: z.string().min(1),
   rules: z.array(ruleSchema),
+  message: z.string(),
 });
 
 export type CreateSegmentSchema = z.infer<typeof createSegmentSchema>;
+
+export type Rules = z.infer<typeof ruleSchema>;
