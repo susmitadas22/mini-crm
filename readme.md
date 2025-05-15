@@ -28,7 +28,7 @@ This project is a minimal Customer Relationship Management (CRM) platform that s
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/sushmitadas22/mini-crm.git
+   git clone https://github.com/susmitadas22/mini-crm.git
    cd mini-crm
    ```
 
