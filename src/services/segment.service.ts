@@ -8,6 +8,7 @@ export const segment = {
         name: data.segmentName,
         audience: {},
         ruleJson: {},
+        message: data.message,
       },
     });
     return segment;
